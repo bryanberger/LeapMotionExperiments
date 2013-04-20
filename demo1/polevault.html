@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Controller Test</title>
+
+		<script src="../polevault/lib/sylvester.src.js"></script>
+		<script src="../polevault/lib/require.js"></script>
+		<script src="../leapjs/leap.js"></script>
+
+		<style>
+		    * {margin:0;padding:0;outline:none;border:none;}
+			body { background: #333333; }
+		</style>
+
+	</head>
+	<body>
+		<script type="text/javascript">
+
+		// make sylvester approximate
+		Sylvester.precision = 0.01;
+		
+		requirejs(['polevault'], function( polevault ) {
+			polevault.on('*', function( type ){
+				if ( type !== 'frame' ) {
+					console.log.apply(console, arguments);
+				}
+			})
+		});
+
+		// var controller = new Leap.Controller();
+		// 	controller.on('frame', function(e) {
+		// 		console.log( e );
+		// 	})
+		// controller.connect();
+
+		</script>
+	</body>
+</html>

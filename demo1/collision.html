@@ -1,0 +1,152 @@
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Test 1</title>
+
+		<script src="../d3.v3.js"></script>
+		<script src="../leapjs/leap.js"></script>
+
+		<style>
+		    * {margin:0;padding:0;outline:none;border:none;}
+			body { background: #333333; }
+			circle { stroke: #000; stroke-opacity: .5;}
+			rect { fill: #fff;}
+		</style>
+
+	</head>
+	<body>
+		<script type="text/javascript">
+		var w = window.innerWidth,//1280,
+		    h = window.innerHeight;//800;
+
+		var nodes = d3.range(200).map(function() { return {radius: Math.random() * 12 + 4}; }),
+		    color = d3.scale.category10();
+
+		var force = d3.layout.force()
+		    .gravity(0.1)
+		    .charge(function(d, i) { return i ? 0 : -3000; })
+		    .nodes(nodes)
+		    .size([w, h]);
+
+		var root = nodes[0];
+		root.radius = 0;
+		root.fixed = true;
+
+		force.start();
+
+		var svg = d3.select("body").append("svg:svg")
+		    .attr("width", w)
+		    .attr("height", h);
+
+	    var finger = svg.append("svg:rect")
+	      .attr("width", 25)
+	      .attr("height", 25);
+
+		svg.selectAll("circle")
+		    .data(nodes.slice(1))
+		  	.enter().append("svg:circle")
+		    .attr("r", function(d) { return d.radius - 2; })
+		    .style("fill", function(d, i) { return color(i % 1); });
+
+		force.on("tick", function(e) {
+		  var q = d3.geom.quadtree(nodes),
+		      i = 0,
+		      n = nodes.length;
+
+		  while (++i < n) {
+		    q.visit(collide(nodes[i]));
+		  }
+
+		  svg.selectAll("circle")
+		      .attr("cx", function(d) { return d.x; })
+		      .attr("cy", function(d) { return d.y; });
+		});
+
+		function onMouseMove(x,y) {
+			root.px = x;
+		  	root.py = y;
+		  	force.resume();
+		}
+
+		function collide(node) {
+		  var r = node.radius + 16,
+		      nx1 = node.x - r,
+		      nx2 = node.x + r,
+		      ny1 = node.y - r,
+		      ny2 = node.y + r;
+		  return function(quad, x1, y1, x2, y2) {
+		    if (quad.point && (quad.point !== node)) {
+		      var x = node.x - quad.point.x,
+		          y = node.y - quad.point.y,
+		          l = Math.sqrt(x * x + y * y),
+		          r = node.radius + quad.point.radius;
+		      if (l < r) {
+		        l = (l - r) / l * .5;
+		        node.x -= x *= l;
+		        node.y -= y *= l;
+		        quad.point.x += x;
+		        quad.point.y += y;
+		      }
+		    }
+		    return x1 > nx2
+		        || x2 < nx1
+		        || y1 > ny2
+		        || y2 < ny1;
+		  };
+		}
+
+		var pointer, posX, posY;
+
+		var originX = window.innerWidth/2;
+		var originY = window.innerHeight/2;
+		var posX, posY;
+
+		var maxX = originX;
+		var maxY = originY;
+
+		var maxSpan = 100;
+
+		function translateXScreenDistance(distance) {
+		  return (distance / maxSpan) * maxX;
+		}
+
+		function translateYScreenDistance(distance) {
+		  return maxY - ((distance / maxSpan) * maxY);
+		}
+
+		function particle(x, y) {
+		  finger
+		      .attr("x", x)
+		      .attr("y", y)
+		      .attr('display','block');
+		}
+
+		Leap.loop(function(frame) {
+
+			if(frame.pointables.length > 0 && (typeof frame.pointables !== 'undefined') ) {
+				pointer = frame.pointables[ frame.pointables.length-1 ];
+				console.log(pointer);
+
+			   	posX = originX + translateXScreenDistance(pointer.tipPosition[0]);
+			   	posY = originY + translateYScreenDistance(pointer.tipPosition[1]);
+
+			    onMouseMove(posX, posY);
+			    particle(posX, posY);
+			} else {
+				finger.attr('display','none');
+			}
+
+
+		 // for (var i = 0; i < frame.pointables.length; i++) {
+		    // pointer = frame.pointables[i];
+		   	// posX = originX + translateXScreenDistance(pointer.tipPosition[0]);
+		   	// posY = originY + translateYScreenDistance(pointer.tipPosition[1]);
+
+		    // onMouseMove(posX, posY);
+		    // particle(posX, posY);
+		//  }
+		});	
+		</script>
+	</body>
+</html>

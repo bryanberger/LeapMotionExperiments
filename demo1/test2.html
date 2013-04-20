@@ -1,0 +1,84 @@
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Test 1</title>
+
+		<script type="text/javascript" src="http://mbostock.github.com/d3/d3.js?1.25.0"></script>
+		<script src="../three.js"></script>
+		<script src="../leapjs/leap.js"></script>
+
+		<style>
+		    * {margin:0;padding:0;outline:none;border:none;}
+			body { background: #333333; }
+      		canvas { width: 100%; height: 100%; background-color: #333333; }
+      		circle { fill: #fff; stroke: #666; }
+    	</style>
+
+	</head>
+	<body>
+		<script type="text/javascript">
+			var scale = d3.scale.category20c(),
+    		i = 0;
+
+			// original position
+			var originX = 600;
+			var originY = 600;
+			var originZ = 600;
+			var posX, posY;
+
+			var maxX = originX;
+			var maxY = originY;
+			var maxZ = originZ;
+
+			var maxSpan = 100;
+			var maxZSpan = 160;
+
+			function translateXScreenDistance(distance) {
+			  return (distance / maxSpan) * maxX;
+			}
+
+			function translateYScreenDistance(distance) {
+			  return maxY - ((distance / maxSpan) * maxY);
+			}
+
+			function translateZScreenDistance(distance){
+			  return (distance / maxZSpan) * maxZ;
+			}
+
+			var svg = d3.select("body").append("svg:svg");
+
+			function particle(x, y, z) {
+			  svg.append("svg:circle")
+			      .attr("cx", x)
+			      .attr("cy", y)
+			      .attr("r", 1e-6 + (z / 20))
+			      .style("opacity", 1 - ((maxZ -z) / 1000))
+			      //.style("fill", Math.random()*0xFFFFFF)
+			      //.style("stroke", scale(++i))
+			      //.style("stroke-opacity", 1 - ((maxZ -z) / 1000))
+			    .transition()
+			      .duration(250)
+			      .ease(Math.sqrt)
+			      .attr("r", 25 + (z / 20))
+			      .style("opacity", 1e-6)
+			     // .style("stroke-opacity", 1e-6)
+			      .remove();
+			}
+
+			var pointer;
+
+			Leap.loop(function(frame) {
+			  for (var i = 0; i < frame.pointables.length; i++) {
+			    pointer = frame.pointables[i];
+			    posX = originX + translateXScreenDistance(pointer.tipPosition[0]);
+			    posY = originY + translateYScreenDistance(pointer.tipPosition[1]);
+			    posZ = originZ + translateZScreenDistance(pointer.tipPosition[2]);
+
+			    particle(posX, posY, posZ);
+			  }
+			});	
+		</script>
+		
+	</body>
+</html>
